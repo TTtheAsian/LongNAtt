@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>經緯度及方位距離計算器</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>經緯度及方位距離計算器</h1>
+    <form id="calculator">
+        <label for="latitude">緯度：</label>
+        <input type="text" id="latitude" name="latitude"><br>
+        <label for="longitude">經度：</label>
+        <input type="text" id="longitude" name="longitude"><br>
+        <label for="bearing">方位：</label>
+        <input type="text" id="bearing" name="bearing"><br>
+        <label for="distance">距離：</label>
+        <input type="text" id="distance" name="distance"><br>
+        <button type="button" onclick="calculateNewCoordinates()">計算新的經緯度</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>初始經緯度</th>
+                <th>方位</th>
+                <th>距離</th>
+                <th>新的緯度</th>
+                <th>新的經度</th>
+            </tr>
+        </thead>
+        <tbody id="resultTable">
+            <!-- 計算結果將插入此處 -->
+        </tbody>
+    </table>
+
+    <script>
+        const resultTable = document.getElementById('resultTable');
+
+        // 轉換經緯度為時分秒格式
+        function toDMS(coord) {
+            const absolute = Math.abs(coord);
+            const degrees = Math.floor(absolute);
+            const minutesNotTruncated = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesNotTruncated);
+            const seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+            return degrees + "°" + minutes + "′" + seconds + "″";
+        }
+
+        function calculateNewCoordinates() {
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const bearing = parseFloat(document.getElementById('bearing').value);
+            const distance = parseFloat(document.getElementById('distance').value);
+
+            // Rhumb Line方法計算新的經緯度
+            const R = 6371;
+            const lat1_rad = latitude * Math.PI / 180;
+            const lon1_rad = longitude * Math.PI / 180;
+            const bearing_rad = bearing * Math.PI / 180;
+            const angular_distance = distance / R;
+
+            const lat2_rad = lat1_rad + angular_distance * Math.cos(bearing_rad);
+                        const lat2 = lat2_rad * 180 / Math.PI;
+
+            const delta_lon_rad = angular_distance * Math.sin(bearing_rad) / Math.cos(lat1_rad);
+            const lon2_rad = lon1_rad + delta_lon_rad;
+            const lon2 = lon2_rad * 180 / Math.PI;
+
+            const lat2_dms = (lat2 >= 0 ? "N" : "S") + toDMS(Math.abs(lat2));
+            const lon2_dms = (lon2 >= 0 ? "E" : "W") + toDMS(Math.abs(lon2));
+
+            // 將結果插入表格
+            const newRow = resultTable.insertRow(0);
+            newRow.insertCell(0).innerHTML = latitude.toFixed(6) + ', ' + longitude.toFixed(6);
+            newRow.insertCell(1).innerHTML = bearing;
+            newRow.insertCell(2).innerHTML = distance;
+            newRow.insertCell(3).innerHTML = lat2_dms;
+            newRow.insertCell(4).innerHTML = lon2_dms;
+
+            // 保留20行資料列
+            if (resultTable.rows.length > 20) {
+                resultTable.deleteRow(20);
+            }
+        }
+    </script>
+</body>
+</html>
